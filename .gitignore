@@ -1,0 +1,12 @@
+### Secrets ###
+secrets/
+
+### Data Sets ###
+data/
+
+### Jupyter Notebook ###
+.ipynb_checkpoints
+*.ipynb
+
+### PyCharm ###
+.idea/
