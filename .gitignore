@@ -2,7 +2,7 @@
 secrets/
 
 ### Data Sets ###
-data/
+/data/
 
 ### Jupyter Notebook ###
 .ipynb_checkpoints

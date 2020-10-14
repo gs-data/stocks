@@ -2,12 +2,18 @@ import pymongo
 import requests
 import json
 
+"""
+Connect to Twitter API 1% sample stream
+Open txt file to write all streamed data
+Connect to local mongodb server to store data filtered by search_terms
+"""
+
 client = pymongo.MongoClient('localhost', 27017)
 db = client.twitter
 collection = db.aapl
 
 search_terms = ['aapl', 'apple', 'stock']
-path_to_raw_data = './data/twitter_stream.txt'
+path_to_raw_data = './data/raw/twitter_stream.txt'
 
 with open('./secrets/twitter.txt', 'r') as secrets:
     for line in secrets:
