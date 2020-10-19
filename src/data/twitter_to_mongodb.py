@@ -23,19 +23,19 @@ headers = {"Authorization": f"Bearer {bearer_token}"}
             
 url = "https://api.twitter.com/2/tweets/sample/stream"
 query_params = {
-    "tweet.fields": "created_at",
+    "tweet.fields": ",".join(["created_at", "lang"]),
     "expansions": "author_id",
     "user.fields": "created_at"
 }
-
 
 with open(path_to_raw_data, 'w') as data_file:
     with requests.get(url, params=query_params, headers=headers, stream=True) as response:
         print("Status code:", response.status_code)
         for response_line in response.iter_lines():
             if response_line:
-                data_file.write(response_line.decode('utf-8') + '\n')
                 json_line = json.loads(response_line)
+                if json_line['data']['lang'] == 'en':
+                    data_file.write(response_line.decode('utf-8') + '\n')
                 if any(s in json_line['data']['text'] for s in search_terms):
                     print(json_line['data']['text'])
                     collection.insert_one(json_line)
