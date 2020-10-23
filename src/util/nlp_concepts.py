@@ -9,7 +9,7 @@ def get_concepts_from_svd(tfidf, svd):
         Fitted vectorizer with learned term vocabulary.
     svd : TruncatedSVD
         SVD fitted to document-term matrix returned by tfidf.
-        
+    
     Returns
     -------
     pandas.DataFrame
@@ -28,7 +28,7 @@ def get_concepts_from_kmeans(tfidf, kmeans):
         Fitted vectorizer with learned term vocabulary.
     kmeans : KMeans
         KMeans fitted to document-term matrix returned by tfidf.
-        
+    
     Returns
     -------
     pandas.DataFrame
@@ -49,13 +49,33 @@ def get_concepts_from_svd_kmeans(tfidf, svd, kmeans):
         SVD fitted to document-term matrix returned by tfidf.
     kmeans : KMeans
         KMeans fitted to document-concept matrix returned by svd.
-        
+    
     Returns
     -------
     pandas.DataFrame
         Columns are terms, rows are "concepts".
     """
-    return pd.DataFrame(svd.inverse_transform(kmeans.cluster_centers_), columns=tfidf.get_feature_names())
+    low_dim = pd.DataFrame(kmeans.cluster_centers_)
+    low_dim = low_dim.reindex(pd.Series(kmeans.labels_).value_counts().index)
+    return pd.DataFrame(svd.inverse_transform(low_dim), columns=tfidf.get_feature_names(), index=low_dim.index)
+
+
+def get_concepts_from_nmf(tfidf, nmf):
+    """Get NMF "concepts" expressed as vectors in term space.
+    
+    Parameters
+    ----------
+    tfidf : TfidfVectorizer
+        Fitted vectorizer with learned term vocabulary.
+    nmf : NMF
+        NMF fitted to document-term matrix returned by tfidf.
+    
+    Returns
+    -------
+    pandas.DataFrame
+        Columns are terms, rows are "concepts".
+    """
+    return pd.DataFrame(nmf.components_, columns=tfidf.get_feature_names())
 
 
 def top_terms_of_concepts(concepts, num_terms, num_concepts):

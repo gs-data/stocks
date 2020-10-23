@@ -1,7 +1,15 @@
+if __name__ == '__main__':
+    import os
+    import sys
+    sys.path[0] = os.getcwd()
+
 import pandas as pd
-import json
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
+
+from src.data.raw_twitter_to_en_text import raw_twitter_to_english_text
+from src.util.nlp_concepts import get_concepts_from_svd
+from src.util.nlp_concepts import print_top_terms
 
 """
 Latent semantic analysis (LSA) of documents using
@@ -15,7 +23,6 @@ The singular values measure weight of "concept"
 The matrix V maps between terms and "concepts"
   each row of V^T is a "concept" expressed in term coordinates
 
-
 Working with sklearn API:
 svd = TruncatedSVD(n_components=dimension_of_concept_space)
 
@@ -26,28 +33,19 @@ svd.components_ is equal to the matrix V^T
 """
 
 
-# Load english tweet text from raw data
-def project_raw_twitter_to_english_text(path_to_raw_data_file):
-    """
-    Yield english text from raw tweets
-    """
-    with open(path_to_raw_data_file, 'r') as raw:
-        for line in raw:
-            json_line = json.loads(line)
-            if json_line['data']['lang'] == 'en':
-                yield json_line['data']['text'].replace('\n', '\\n')
-
-
 path_to_raw_data = './data/raw/twitter_stream.txt'
 
 # Create document term tfidf sparse matrix
-tfidf = TfidfVectorizer(ngram_range=(1, 1),
-                        strip_accents='unicode')
-sparse = tfidf.fit_transform(project_raw_twitter_to_english_text(path_to_raw_data))
+tfidf = TfidfVectorizer(ngram_range=(1, 3),
+                        strip_accents='unicode',
+                        stop_words='english')
+sparse = tfidf.fit_transform(raw_twitter_to_english_text(path_to_raw_data))
 print("Document-Term matrix size:", sparse.shape)
+
 
 # Choose dimension of the "concept" space
 num_concepts = 500
+
 
 # Compute dimensionality reduction
 svd = TruncatedSVD(n_components=num_concepts)
@@ -62,13 +60,14 @@ print("Explained Variance Ratio:", sum(svd.explained_variance_ratio_))
 print("Ratio of sum of squares of singular values:", sum(svd.singular_values_ ** 2) / sparse.shape[0])
 
 # Matrix V^T from decomposition each row is a "concept"
-concepts = pd.DataFrame(svd.components_, columns=tfidf.get_feature_names())
+concepts = get_concepts_from_svd(tfidf, svd)
+
+
+# Choose number of concepts to view
+num_of_top_concepts = 25
+# Choose number of terms to view for each concept
+num_of_top_terms = 12
+
 
 # Print top terms from the top concepts
-num_of_top_terms = 10
-num_of_top_concepts = 50
-print('\n' + '\n'.join(
-    [str(row) + ' ' + ',  '.join(
-        [term for term in concepts.iloc[row].nlargest(num_of_top_terms).index])
-     for row in range(num_of_top_concepts)])
-)
+print_top_terms(concepts, num_of_top_terms, num_of_top_concepts)
