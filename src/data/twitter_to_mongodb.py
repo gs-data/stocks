@@ -28,13 +28,19 @@ query_params = {
     "user.fields": "created_at"
 }
 
+count = 0
 with open(path_to_raw_data, 'w') as data_file:
+    print(f"Writing to {path_to_raw_data}")
     with requests.get(url, params=query_params, headers=headers, stream=True) as response:
         print("Status code:", response.status_code)
+        print("Headers: ", response.headers)
         for response_line in response.iter_lines():
             if response_line:
                 json_line = json.loads(response_line)
                 if json_line['data']['lang'] == 'en':
+                    count += 1
+                    if (count % 1000 == 0):
+                        print(f"Count: {count}")
                     data_file.write(response_line.decode('utf-8') + '\n')
                 if any(s in json_line['data']['text'] for s in search_terms):
                     print(json_line['data']['text'])

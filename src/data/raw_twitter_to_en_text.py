@@ -17,4 +17,4 @@ def raw_twitter_to_english_text(path_to_raw_data_file):
         for line in raw:
             json_line = json.loads(line)
             if json_line['data']['lang'] == 'en':
-                yield json_line['data']['text'].replace('\n', '\\n')
+                yield json_line['data']['text']#.replace('\n', '\\n')

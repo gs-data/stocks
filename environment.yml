@@ -9,3 +9,5 @@ dependencies:
   - numpy
   - pandas
   - scikit-learn
+  - nltk # also need data in env using nltk.download()
+  - gensim
