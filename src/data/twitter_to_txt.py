@@ -1,16 +1,14 @@
-import pymongo
 import requests
 import json
+from datetime import datetime, timezone
 
 """
 Connect to Twitter API 1% sample stream
-Connect to local mongodb server to store data
-Filter stream by lang=='en' and write 5000 tweets to mongo
+Write to txt file all streamed data filtered by lang == 'en'
+  filenames: "YYYY-mm-dd-twitter-stream-XXX.txt"
 """
 
-client = pymongo.MongoClient('localhost', 27017)
-db = client.twitter
-collection = db.raw
+path_to_raw_data_pattern = './data/raw/{}-twitter-stream-{:03}.txt'
 
 with open('./secrets/twitter.txt', 'r') as secrets:
     for line in secrets:
@@ -25,19 +23,28 @@ query_params = {
     "user.fields": "created_at"
 }
 
+date_today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
 count = 0
+batches = 0
 with requests.get(url, params=query_params, headers=headers, stream=True) as response:
     print("Status code:", response.status_code)
     print("Headers: ", response.headers)
     print("x-rate-limit-remaining:", response.headers['x-rate-limit-remaining'])
-    for line in response.iter_lines():
-        if line:
-            json_line = json.loads(line)
-            if json_line['data']['lang'] == 'en':
-                collection.insert_one(json_line)
-                count += 1
-                if count == 5000:
-                    break     
+    lines = response.iter_lines()
+    while count < 15000:
+        path_to_raw_data = path_to_raw_data_pattern.format(date_today, batches)
+        with open(path_to_raw_data, 'w') as data_file:
+            print(f"Writing to {path_to_raw_data}")
+            for line in lines:
+                if line:
+                    json_line = json.loads(line)
+                    if json_line['data']['lang'] == 'en':
+                        data_file.write(line.decode('utf-8') + '\n')
+                        count += 1
+                        if (count % 5000 == 0):
+                            break
+            batches += 1
     if response.status_code != 200:
         raise Exception(
             "Request returned an error: {} {}".format(
