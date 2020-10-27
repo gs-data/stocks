@@ -11,3 +11,5 @@ dependencies:
   - scikit-learn
   - nltk # also need data in env using nltk.download()
   - gensim
+  - spacy
+  - spacy-model-en_core_web_sm
