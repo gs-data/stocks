@@ -13,3 +13,4 @@ dependencies:
   - gensim
   - spacy
   - spacy-model-en_core_web_sm
+  - wordcloud
